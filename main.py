@@ -3,6 +3,7 @@ import shutil
 import customtkinter as ctk
 from tkinter import filedialog, Tk
 from tkinterdnd2 import TkinterDnD, DND_FILES
+import time
 
 # Update the on_drop function to hide the "اسحب وأفلت" label when files are added
 def on_drop(event):
@@ -22,7 +23,7 @@ def on_drop(event):
     # Display file previews
     for file in files:
         file_name = os.path.basename(file)
-        file_label = ctk.CTkLabel(drop_area, text=file_name, anchor="w", font=("Arial", 12), text_color="#FFFFFF")
+        file_label = ctk.CTkButton(drop_area, text=file_name, anchor="w", font=("Arial", 12), text_color="#FFFFFF",command=lambda file=file: os.startfile(file),fg_color="transparent")
         file_label.pack(fill="x", padx=10, pady=5)
 
     if destination:
@@ -40,7 +41,7 @@ def select_destination():
             start_button.configure(state="normal")
 
 def start_transfer():
-    global files, destination, progress_bar, label, start_button, action_var
+    global files, destination, progress_bar, label, start_button, action_var,drop_label
     if not files:
         label.configure(text="اسحب وأفلت الملفات هنا")
         return
@@ -59,14 +60,32 @@ def start_transfer():
             elif action == "نقل":
                 shutil.move(file, destination)
 
-            progress_bar.set(i / total_files)
-
-        label.configure(text="تمت العملية بنجاح")
+            progress_bar.set(i / total_files)    
     except Exception as e:
-        label.configure(text=f"حدث خطأ: {e}")
-
-    files = []
-    start_button.configure(state="disabled")
+        print(f"Error: {e}")
+    finally:
+        for widget in drop_area.winfo_children():
+            widget.destroy()
+        # Ensure drop_label exists before calling place
+        if 'drop_label' in globals() and drop_label.winfo_exists():
+            drop_label.place(relx=0.5, rely=0.5, anchor="center")  # Show the "اسحب وأفلت" label again
+        else:
+            # Recreate drop_label if it does not exist
+            drop_label = ctk.CTkLabel(
+                drop_area,
+                text="اسحب وأفلت الملفات هنا",
+                font=custom_font,
+                text_color="#FFFFFF"
+            )
+            drop_label.place(relx=0.5, rely=0.5, anchor="center")
+        # Reset the progress bar and destination entry
+        files = []
+        progress_bar.set(0)
+        destination_entry.configure(state="normal")
+        destination_entry.delete(0, "end")
+        destination_entry.configure(state="readonly")
+        start_button.configure(state="disabled")
+    
 
 # Initialize the main application
 root = TkinterDnD.Tk()
@@ -167,7 +186,7 @@ start_button.pack(pady=10)
 custom_font = ("Arial", 16)  # الخط الافتراضي
 
 # Update the drop area with better styling
-drop_area = ctk.CTkFrame(
+drop_area = ctk.CTkScrollableFrame(
     main_frame,
     corner_radius=15,
     border_width=2,
