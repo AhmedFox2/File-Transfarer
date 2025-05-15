@@ -186,7 +186,7 @@ start_button.pack(pady=10)
 custom_font = ("Arial", 16)  # الخط الافتراضي
 
 # Update the drop area with better styling
-drop_area = ctk.CTkScrollableFrame(
+drop_area = ctk.CTkFrame(
     main_frame,
     corner_radius=15,
     border_width=2,
